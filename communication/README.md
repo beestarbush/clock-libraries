@@ -5,22 +5,24 @@ Shared C++/Qt communication library for app/backend protocol code.
 ## Goals
 
 - Centralize JSON-RPC wire contract (methods/topics/frames).
-- Keep app-style architecture and naming (`Services::<Domain>::Service`).
+- Use explicit shared-library ownership naming (`Common::Communication::<Domain>`).
 - Let backend and app consume the same protocol implementation.
 
 ## Modules
 
-- `services/websocket/Types.h`
+- `websocket/Types.h`
   - Shared enums and wire string conversion helpers.
-- `services/websocket/Frame.*`
+- `websocket/Frame.*`
   - JSON-RPC frame builders and parsers.
-- `services/websocket/Service.*`
+- `websocket/client/Service.*`
   - Reusable Qt WebSocket client service with request correlation.
-- `services/websocket/SubscriptionHelper.*`
+- `websocket/server/Service.*`
+  - Reusable Qt WebSocket server service with request and publish handling.
+- `websocket/SubscriptionHelper.*`
   - Shared startup/bootstrap + topic subscription helper.
-- `services/configuration/DeviceConfiguration.*`
+- `configuration/DeviceConfiguration.*`
   - Shared configuration schema mapping and serialization helpers.
-- `services/protocol/MethodCatalog.*`
+- `protocol/MethodCatalog.*`
   - Canonical method/topic lists for completeness checks.
 
 ## Build

@@ -1,5 +1,5 @@
-#ifndef SERVICES_WEBSOCKET_SUBSCRIPTIONHELPER_H
-#define SERVICES_WEBSOCKET_SUBSCRIPTIONHELPER_H
+#ifndef COMMON_COMMUNICATION_WEBSOCKET_SUBSCRIPTIONHELPER_H
+#define COMMON_COMMUNICATION_WEBSOCKET_SUBSCRIPTIONHELPER_H
 
 #include <QMetaObject>
 #include <QObject>
@@ -7,9 +7,9 @@
 
 #include <functional>
 
-#include "Service.h"
+#include "websocket/client/Service.h"
 
-namespace Services::WebSocket
+namespace Common::Communication::WebSocket
 {
 
 class SubscriptionHelper : public QObject
@@ -19,7 +19,7 @@ class SubscriptionHelper : public QObject
   public:
     using DataHandler = std::function<void(const QJsonObject& data)>;
 
-    explicit SubscriptionHelper(Service& webSocket, QObject* parent = nullptr);
+    explicit SubscriptionHelper(Client::Service& webSocket, QObject* parent = nullptr);
 
     void setStartupTimeoutMs(int timeoutMs);
     void start(const Topic& topic, Method bootstrapMethod, DataHandler handler);
@@ -33,7 +33,7 @@ class SubscriptionHelper : public QObject
     void performBootstrap();
     void completeStartup();
 
-    Service& m_webSocket;
+    Client::Service& m_webSocket;
     QTimer m_startupTimeoutTimer;
     QMetaObject::Connection m_connectionWatcher;
 
@@ -43,6 +43,6 @@ class SubscriptionHelper : public QObject
     DataHandler m_handler;
 };
 
-} // namespace Services::WebSocket
+} // namespace Common::Communication::WebSocket
 
-#endif // SERVICES_WEBSOCKET_SUBSCRIPTIONHELPER_H
+#endif // COMMON_COMMUNICATION_WEBSOCKET_SUBSCRIPTIONHELPER_H

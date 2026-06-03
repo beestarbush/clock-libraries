@@ -13,17 +13,23 @@ set(CMAKE_AUTORCC OFF)
 find_package(Qt6 REQUIRED COMPONENTS Core Network WebSockets Test)
 
 add_library(communication STATIC
-    src/services/websocket/Types.h
-    src/services/websocket/Frame.h
-    src/services/websocket/Frame.cpp
-    src/services/websocket/Service.h
-    src/services/websocket/Service.cpp
-    src/services/websocket/SubscriptionHelper.h
-    src/services/websocket/SubscriptionHelper.cpp
-    src/services/configuration/DeviceConfiguration.h
-    src/services/configuration/DeviceConfiguration.cpp
-    src/services/protocol/MethodCatalog.h
-    src/services/protocol/MethodCatalog.cpp
+    src/rest/client/Service.h
+    src/rest/client/Service.cpp
+    src/rest/server/Service.h
+    src/rest/server/Service.cpp
+    src/websocket/Types.h
+    src/websocket/Frame.h
+    src/websocket/Frame.cpp
+    src/websocket/client/Service.h
+    src/websocket/client/Service.cpp
+    src/websocket/server/Service.h
+    src/websocket/server/Service.cpp
+    src/websocket/SubscriptionHelper.h
+    src/websocket/SubscriptionHelper.cpp
+    src/configuration/DeviceConfiguration.h
+    src/configuration/DeviceConfiguration.cpp
+    src/protocol/MethodCatalog.h
+    src/protocol/MethodCatalog.cpp
 )
 
 add_library(clock_common::communication ALIAS communication)

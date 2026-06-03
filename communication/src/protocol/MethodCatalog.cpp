@@ -1,11 +1,11 @@
 #include "MethodCatalog.h"
 
-namespace Services::Protocol
+namespace Common::Communication::Protocol
 {
 
-QList<Services::WebSocket::Method> MethodCatalog::allMethods()
+QList<Common::Communication::WebSocket::Method> MethodCatalog::allMethods()
 {
-    using Services::WebSocket::Method;
+    using Common::Communication::WebSocket::Method;
 
     return {
         Method::Subscribe,
@@ -30,9 +30,9 @@ QList<Services::WebSocket::Method> MethodCatalog::allMethods()
     };
 }
 
-QList<Services::WebSocket::Topic> MethodCatalog::allTopics()
+QList<Common::Communication::WebSocket::Topic> MethodCatalog::allTopics()
 {
-    using Services::WebSocket::Topic;
+    using Common::Communication::WebSocket::Topic;
 
     return {
         Topic::Configuration,
@@ -44,4 +44,4 @@ QList<Services::WebSocket::Topic> MethodCatalog::allTopics()
     };
 }
 
-} // namespace Services::Protocol
+} // namespace Common::Communication::Protocol

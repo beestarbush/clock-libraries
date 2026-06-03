@@ -1,5 +1,5 @@
-#ifndef SERVICES_WEBSOCKET_FRAME_H
-#define SERVICES_WEBSOCKET_FRAME_H
+#ifndef COMMON_COMMUNICATION_WEBSOCKET_FRAME_H
+#define COMMON_COMMUNICATION_WEBSOCKET_FRAME_H
 
 #include <QJsonObject>
 #include <QJsonValue>
@@ -7,7 +7,7 @@
 
 #include "Types.h"
 
-namespace Services::WebSocket
+namespace Common::Communication::WebSocket
 {
 
 class Frame
@@ -31,6 +31,6 @@ class Frame
     static QString parseErrorMessage(const QJsonObject& message);
 };
 
-} // namespace Services::WebSocket
+} // namespace Common::Communication::WebSocket
 
-#endif // SERVICES_WEBSOCKET_FRAME_H
+#endif // COMMON_COMMUNICATION_WEBSOCKET_FRAME_H

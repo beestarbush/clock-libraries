@@ -1,6 +1,6 @@
 #include "Frame.h"
 
-namespace Services::WebSocket
+namespace Common::Communication::WebSocket
 {
 
 QJsonObject Frame::buildRequest(const QJsonValue& id, Method method, const QJsonObject& params)
@@ -99,4 +99,4 @@ QString Frame::parseErrorMessage(const QJsonObject& message)
     return message.value("error").toObject().value("message").toString();
 }
 
-} // namespace Services::WebSocket
+} // namespace Common::Communication::WebSocket

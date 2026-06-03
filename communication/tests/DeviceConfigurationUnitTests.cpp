@@ -1,7 +1,7 @@
-#include <QtTest>
 #include <QJsonArray>
+#include <QtTest>
 
-#include "services/configuration/DeviceConfiguration.h"
+#include "configuration/DeviceConfiguration.h"
 
 class DeviceConfigurationUnitTests : public QObject
 {
@@ -10,7 +10,7 @@ class DeviceConfigurationUnitTests : public QObject
   private slots:
     void testDefaultState();
     void testToJsonWithAllFields();
-        void testFromJsonWithFrameUnwrap();
+    void testFromJsonWithFrameUnwrap();
     void testFromJsonWithMissingOptionalFields();
     void testFromJsonFiltersInvalidApplications();
     void testApplicationMutations();
@@ -18,7 +18,7 @@ class DeviceConfigurationUnitTests : public QObject
 
 void DeviceConfigurationUnitTests::testDefaultState()
 {
-    using namespace Services::Configuration;
+    using namespace Common::Communication::Configuration;
 
     DeviceConfiguration config;
 
@@ -37,7 +37,7 @@ void DeviceConfigurationUnitTests::testDefaultState()
 
 void DeviceConfigurationUnitTests::testToJsonWithAllFields()
 {
-    using namespace Services::Configuration;
+    using namespace Common::Communication::Configuration;
 
     DeviceConfiguration config;
     config.version = "2.3";
@@ -82,7 +82,7 @@ void DeviceConfigurationUnitTests::testToJsonWithAllFields()
 
 void DeviceConfigurationUnitTests::testFromJsonWithFrameUnwrap()
 {
-    using namespace Services::Configuration;
+    using namespace Common::Communication::Configuration;
 
     QJsonObject configPayload;
     configPayload["version"] = "3.0";
@@ -114,7 +114,7 @@ void DeviceConfigurationUnitTests::testFromJsonWithFrameUnwrap()
 
 void DeviceConfigurationUnitTests::testFromJsonWithMissingOptionalFields()
 {
-    using namespace Services::Configuration;
+    using namespace Common::Communication::Configuration;
 
     QJsonObject raw;
     raw["applications"] = QJsonArray{};
@@ -132,7 +132,7 @@ void DeviceConfigurationUnitTests::testFromJsonWithMissingOptionalFields()
 
 void DeviceConfigurationUnitTests::testFromJsonFiltersInvalidApplications()
 {
-    using namespace Services::Configuration;
+    using namespace Common::Communication::Configuration;
 
     QJsonArray apps;
     apps.append(QJsonObject{{"id", "valid-1"}, {"type", "clock"}});
@@ -152,7 +152,7 @@ void DeviceConfigurationUnitTests::testFromJsonFiltersInvalidApplications()
 
 void DeviceConfigurationUnitTests::testApplicationMutations()
 {
-    using namespace Services::Configuration;
+    using namespace Common::Communication::Configuration;
 
     DeviceConfiguration config;
 

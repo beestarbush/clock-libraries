@@ -1,9 +1,9 @@
-#ifndef SERVICES_WEBSOCKET_TYPES_H
-#define SERVICES_WEBSOCKET_TYPES_H
+#ifndef COMMON_COMMUNICATION_WEBSOCKET_TYPES_H
+#define COMMON_COMMUNICATION_WEBSOCKET_TYPES_H
 
 #include <QString>
 
-namespace Services::WebSocket
+namespace Common::Communication::WebSocket
 {
 Q_NAMESPACE
 
@@ -254,6 +254,6 @@ inline QString playModeToString(PlayMode mode)
     }
 }
 
-} // namespace Services::WebSocket
+} // namespace Common::Communication::WebSocket
 
-#endif // SERVICES_WEBSOCKET_TYPES_H
+#endif // COMMON_COMMUNICATION_WEBSOCKET_TYPES_H

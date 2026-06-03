@@ -2,14 +2,14 @@
 
 #include <QLoggingCategory>
 
-Q_LOGGING_CATEGORY(SubscriptionHelperService, "CommunicationSubscriptionHelper")
+Q_LOGGING_CATEGORY(SubscriptionHelperService, "SubscriptionHelper")
 
-namespace Services::WebSocket
+namespace Common::Communication::WebSocket
 {
 
 constexpr int DEFAULT_STARTUP_TIMEOUT_MS = 10000;
 
-SubscriptionHelper::SubscriptionHelper(Service& webSocket, QObject* parent)
+SubscriptionHelper::SubscriptionHelper(Client::Service& webSocket, QObject* parent)
     : QObject(parent),
       m_webSocket(webSocket),
       m_startupInProgress(false),
@@ -29,7 +29,7 @@ SubscriptionHelper::SubscriptionHelper(Service& webSocket, QObject* parent)
         emit startupTimedOut();
     });
 
-    connect(&m_webSocket, &Service::publishReceived, this, [this](const Topic& topic, const QJsonObject& data) {
+    connect(&m_webSocket, &Client::Service::publishReceived, this, [this](const Topic& topic, const QJsonObject& data) {
         if (topic != m_topic || !m_handler) {
             return;
         }
@@ -59,7 +59,7 @@ void SubscriptionHelper::start(const Topic& topic, Method bootstrapMethod, DataH
         return;
     }
 
-    m_connectionWatcher = connect(&m_webSocket, &Service::connectedChanged, this, [this]() {
+    m_connectionWatcher = connect(&m_webSocket, &Client::Service::connectedChanged, this, [this]() {
         if (m_webSocket.connected() && m_startupInProgress) {
             disconnect(m_connectionWatcher);
             performBootstrap();
@@ -114,4 +114,4 @@ void SubscriptionHelper::completeStartup()
     emit startupCompleted();
 }
 
-} // namespace Services::WebSocket
+} // namespace Common::Communication::WebSocket

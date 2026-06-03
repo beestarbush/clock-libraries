@@ -1,8 +1,8 @@
 #include <QtTest>
 
-#include "services/protocol/MethodCatalog.h"
-#include "services/websocket/Frame.h"
-#include "services/websocket/Types.h"
+#include "protocol/MethodCatalog.h"
+#include "websocket/Frame.h"
+#include "websocket/Types.h"
 
 class CommunicationUnitTests : public QObject
 {
@@ -27,7 +27,7 @@ class CommunicationUnitTests : public QObject
 
 void CommunicationUnitTests::testMessageTypeMapping()
 {
-    using namespace Services::WebSocket;
+    using namespace Common::Communication::WebSocket;
 
     QCOMPARE(messageTypeFromString("request"), MessageType::Request);
     QCOMPARE(messageTypeFromString("response"), MessageType::Response);
@@ -42,7 +42,7 @@ void CommunicationUnitTests::testMessageTypeMapping()
 
 void CommunicationUnitTests::testMethodMappingRoundTrip()
 {
-    using namespace Services::WebSocket;
+    using namespace Common::Communication::WebSocket;
 
     const QList<Method> methods = {
         Method::Subscribe,
@@ -78,7 +78,7 @@ void CommunicationUnitTests::testMethodMappingRoundTrip()
 
 void CommunicationUnitTests::testTopicMappingRoundTrip()
 {
-    using namespace Services::WebSocket;
+    using namespace Common::Communication::WebSocket;
 
     const QList<Topic> topics = {
         Topic::Configuration,
@@ -101,7 +101,7 @@ void CommunicationUnitTests::testTopicMappingRoundTrip()
 
 void CommunicationUnitTests::testPlayModeToString()
 {
-    using namespace Services::WebSocket;
+    using namespace Common::Communication::WebSocket;
 
     QCOMPARE(playModeToString(PlayMode::Concurrent), QString("concurrent"));
     QCOMPARE(playModeToString(PlayMode::Queue), QString("queue"));
@@ -110,7 +110,7 @@ void CommunicationUnitTests::testPlayModeToString()
 
 void CommunicationUnitTests::testBuildRequestFrame()
 {
-    using namespace Services::WebSocket;
+    using namespace Common::Communication::WebSocket;
 
     QJsonObject params;
     params["value"] = 42;
@@ -129,7 +129,7 @@ void CommunicationUnitTests::testBuildRequestFrame()
 
 void CommunicationUnitTests::testBuildResponseFrame()
 {
-    using namespace Services::WebSocket;
+    using namespace Common::Communication::WebSocket;
 
     QJsonObject result;
     result["status"] = "ok";
@@ -147,7 +147,7 @@ void CommunicationUnitTests::testBuildResponseFrame()
 
 void CommunicationUnitTests::testBuildErrorResponseFrame()
 {
-    using namespace Services::WebSocket;
+    using namespace Common::Communication::WebSocket;
 
     const QJsonObject response = Frame::buildErrorResponse(QJsonValue(99), -32601, "Method not found");
 
@@ -161,7 +161,7 @@ void CommunicationUnitTests::testBuildErrorResponseFrame()
 
 void CommunicationUnitTests::testBuildPublishFrame()
 {
-    using namespace Services::WebSocket;
+    using namespace Common::Communication::WebSocket;
 
     QJsonObject params;
     params["processor_temperature"] = 45000;
@@ -179,7 +179,7 @@ void CommunicationUnitTests::testBuildPublishFrame()
 
 void CommunicationUnitTests::testFrameParsers()
 {
-    using namespace Services::WebSocket;
+    using namespace Common::Communication::WebSocket;
 
     QJsonObject params;
     params["topic"] = "configuration";
@@ -200,14 +200,14 @@ void CommunicationUnitTests::testFrameParsers()
     QCOMPARE(Frame::parseResult(response).value("files").toArray().size(), 2);
 
     const QJsonObject publish = Frame::buildPublish(Topic::Environment,
-                                                       QJsonObject{{"temperature_celsius", 21.5}});
+                                                    QJsonObject{{"temperature_celsius", 21.5}});
     QCOMPARE(Frame::parseTopic(publish), Topic::Environment);
     QCOMPARE(Frame::parseParams(publish).value("temperature_celsius").toDouble(), 21.5);
 }
 
 void CommunicationUnitTests::testFrameIdValidation()
 {
-    using namespace Services::WebSocket;
+    using namespace Common::Communication::WebSocket;
 
     QVERIFY(Frame::isValidId(QJsonValue(1)));
     QVERIFY(Frame::isValidId(QJsonValue(QString("abc"))));
@@ -217,8 +217,8 @@ void CommunicationUnitTests::testFrameIdValidation()
 
 void CommunicationUnitTests::testMethodCatalogCoverage()
 {
-    using namespace Services::Protocol;
-    using namespace Services::WebSocket;
+    using namespace Common::Communication::Protocol;
+    using namespace Common::Communication::WebSocket;
 
     const QList<Method> methods = MethodCatalog::allMethods();
 
@@ -251,8 +251,8 @@ void CommunicationUnitTests::testMethodCatalogCoverage()
 
 void CommunicationUnitTests::testTopicCatalogCoverage()
 {
-    using namespace Services::Protocol;
-    using namespace Services::WebSocket;
+    using namespace Common::Communication::Protocol;
+    using namespace Common::Communication::WebSocket;
 
     const QList<Topic> topics = MethodCatalog::allTopics();
 

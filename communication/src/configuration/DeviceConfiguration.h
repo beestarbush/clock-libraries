@@ -1,12 +1,12 @@
-#ifndef SERVICES_CONFIGURATION_DEVICECONFIGURATION_H
-#define SERVICES_CONFIGURATION_DEVICECONFIGURATION_H
+#ifndef COMMON_COMMUNICATION_CONFIGURATION_DEVICECONFIGURATION_H
+#define COMMON_COMMUNICATION_CONFIGURATION_DEVICECONFIGURATION_H
 
 #include <QDateTime>
 #include <QJsonObject>
 #include <QList>
 #include <QString>
 
-namespace Services::Configuration
+namespace Common::Communication::Configuration
 {
 
 class DeviceConfiguration
@@ -33,6 +33,6 @@ class DeviceConfiguration
     void updateApplication(const QJsonObject& appConfig);
 };
 
-} // namespace Services::Configuration
+} // namespace Common::Communication::Configuration
 
-#endif // SERVICES_CONFIGURATION_DEVICECONFIGURATION_H
+#endif // COMMON_COMMUNICATION_CONFIGURATION_DEVICECONFIGURATION_H

@@ -1,5 +1,5 @@
-#ifndef SERVICES_WEBSOCKET_SERVICE_H
-#define SERVICES_WEBSOCKET_SERVICE_H
+#ifndef COMMON_COMMUNICATION_WEBSOCKET_CLIENT_SERVICE_H
+#define COMMON_COMMUNICATION_WEBSOCKET_CLIENT_SERVICE_H
 
 #include <QHash>
 #include <QJsonObject>
@@ -9,9 +9,9 @@
 
 #include <functional>
 
-#include "Types.h"
+#include "websocket/Types.h"
 
-namespace Services::WebSocket
+namespace Common::Communication::WebSocket::Client
 {
 
 class Service : public QObject
@@ -33,15 +33,15 @@ class Service : public QObject
     void connectToSocket();
     void disconnectFromSocket();
 
-    void request(const Method& method, const QJsonObject& params, ResponseCallback callback);
-    void publish(const Topic& topic, const QJsonObject& params = QJsonObject());
-    void subscribe(const Topic& topic);
-    void unsubscribe(const Topic& topic);
+    void request(const ::Common::Communication::WebSocket::Method& method, const QJsonObject& params, ResponseCallback callback);
+    void publish(const ::Common::Communication::WebSocket::Topic& topic, const QJsonObject& params = QJsonObject());
+    void subscribe(const ::Common::Communication::WebSocket::Topic& topic);
+    void unsubscribe(const ::Common::Communication::WebSocket::Topic& topic);
 
   signals:
     void serverUrlChanged();
     void connectedChanged();
-    void publishReceived(const Topic& topic, const QJsonObject& data);
+    void publishReceived(const ::Common::Communication::WebSocket::Topic& topic, const QJsonObject& data);
 
   private:
     void onConnected();
@@ -56,9 +56,9 @@ class Service : public QObject
     bool m_connected;
     int m_nextRequestId;
     QHash<QString, ResponseCallback> m_pendingRequests;
-    QList<Topic> m_subscribedTopics;
+    QList<::Common::Communication::WebSocket::Topic> m_subscribedTopics;
 };
 
-} // namespace Services::WebSocket
+} // namespace Common::Communication::WebSocket::Client
 
-#endif // SERVICES_WEBSOCKET_SERVICE_H
+#endif // COMMON_COMMUNICATION_WEBSOCKET_CLIENT_SERVICE_H

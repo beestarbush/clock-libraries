@@ -5,6 +5,8 @@ project(clock-common-libraries LANGUAGES CXX)
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
+enable_testing()
+
 add_subdirectory(communication)
 add_subdirectory(utilities)
 add_subdirectory(configuration)

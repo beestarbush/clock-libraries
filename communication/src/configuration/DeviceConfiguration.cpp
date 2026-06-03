@@ -4,7 +4,7 @@
 
 #include <algorithm>
 
-namespace Services::Configuration
+namespace Common::Communication::Configuration
 {
 
 DeviceConfiguration::DeviceConfiguration()
@@ -121,4 +121,4 @@ void DeviceConfiguration::updateApplication(const QJsonObject& appConfig)
     addApplication(appConfig);
 }
 
-} // namespace Services::Configuration
+} // namespace Common::Communication::Configuration
