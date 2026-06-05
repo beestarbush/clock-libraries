@@ -2,6 +2,7 @@
 
 #include <QJsonDocument>
 #include <QLoggingCategory>
+#include <QNetworkProxy>
 
 #include "websocket/Frame.h"
 
@@ -34,6 +35,10 @@ Service::Service(QObject* parent)
       m_connected(false),
       m_nextRequestId(1)
 {
+    // Keep local backend connections deterministic on embedded devices.
+    // System proxy auto-discovery may introduce multi-second delays.
+    m_webSocket.setProxy(QNetworkProxy::NoProxy);
+
     connect(&m_webSocket, &QWebSocket::connected, this, &Service::onConnected);
     connect(&m_webSocket, &QWebSocket::disconnected, this, &Service::onDisconnected);
     connect(&m_webSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::errorOccurred), this, &Service::onError);

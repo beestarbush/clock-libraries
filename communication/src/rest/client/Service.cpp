@@ -2,6 +2,7 @@
 
 #include <QJsonDocument>
 #include <QLoggingCategory>
+#include <QNetworkProxy>
 #include <QNetworkRequest>
 
 Q_LOGGING_CATEGORY(RestClientService, "RestClientService")
@@ -17,6 +18,8 @@ Service::Service(QObject* parent)
       m_networkManager(this),
       m_serverUrl(PROPERTY_SERVER_URL_DEFAULT)
 {
+    // Keep local backend calls deterministic on embedded devices.
+    m_networkManager.setProxy(QNetworkProxy::NoProxy);
 }
 
 QString Service::serverUrl() const

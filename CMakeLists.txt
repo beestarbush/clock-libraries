@@ -7,9 +7,23 @@ include(GNUInstallDirs)
 
 enable_testing()
 
+if (CMAKE_CROSSCOMPILING OR CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64|arm)")
+    set(PLATFORM "target")
+    add_definitions(-DPLATFORM_IS_TARGET)
+elseif(UNIX AND NOT APPLE)
+    set(PLATFORM "host")
+    add_definitions(-DPLATFORM_IS_HOST)
+endif()
+
 add_subdirectory(communication)
 add_subdirectory(utilities)
 add_subdirectory(configuration)
+
+if (CMAKE_CROSSCOMPILING OR CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64|arm)")
+    add_definitions(-DPLATFORM_IS_TARGET)
+elseif(UNIX AND NOT APPLE)
+    add_definitions(-DPLATFORM_IS_HOST)
+endif()
 
 write_basic_package_version_file(
 	${CMAKE_CURRENT_BINARY_DIR}/ClockCommonLibrariesConfigVersion.cmake

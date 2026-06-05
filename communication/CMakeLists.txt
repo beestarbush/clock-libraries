@@ -54,6 +54,12 @@ target_compile_options(communication
         -Wpedantic
 )
 
+if (CMAKE_CROSSCOMPILING OR CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64|arm)")
+    target_compile_definitions(communication PUBLIC PLATFORM_IS_TARGET)
+elseif(UNIX AND NOT APPLE)
+    target_compile_definitions(communication PUBLIC PLATFORM_IS_HOST)
+endif()
+
 enable_testing()
 
 add_executable(communication_unit_tests

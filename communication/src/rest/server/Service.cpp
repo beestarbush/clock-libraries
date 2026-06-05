@@ -15,7 +15,7 @@ namespace Common::Communication::Rest::Server
 namespace
 {
 #ifdef PLATFORM_IS_TARGET
-const QString MEDIA_DIR = QStringLiteral("/data/media");
+const QString MEDIA_DIR = QStringLiteral("./media");
 #else
 const QString MEDIA_DIR = QStringLiteral("/workdir/data/media");
 #endif
@@ -95,6 +95,9 @@ void Service::handleHttpRequest(QTcpSocket* socket,
                                 const QHash<QByteArray, QByteArray>& headers,
                                 const QByteArray& body)
 {
+    Q_UNUSED(headers)
+    qCDebug(RestServerService) << "HTTP request method=" << method << "path=" << path << "bodyBytes=" << body.size();
+
     if (method == "OPTIONS") {
         sendResponse(socket, 204, "No Content", "text/plain", QByteArray());
         return;
@@ -158,18 +161,23 @@ void Service::handleGetMedia(QTcpSocket* socket, const QString& path)
 {
     const QString fileName = safeFileName(path.mid(QStringLiteral("/media/").size()));
     if (fileName.isEmpty()) {
+        qCWarning(RestServerService) << "GET /media with empty filename path=" << path;
         sendResponse(socket, 404, "Not Found", "text/plain", "Not Found");
         return;
     }
 
     const QString filePath = MEDIA_DIR + QStringLiteral("/%1").arg(fileName);
     QFile file(filePath);
+    qCDebug(RestServerService) << "GET /media filename=" << fileName << "resolvedPath=" << filePath << "exists=" << file.exists();
     if (!file.exists() || !file.open(QIODevice::ReadOnly)) {
+        qCWarning(RestServerService) << "Failed to open media file" << filePath;
         sendResponse(socket, 404, "Not Found", "text/plain", "Not Found");
         return;
     }
 
-    sendResponse(socket, 200, "OK", contentTypeForFile(filePath), file.readAll());
+    const QByteArray payload = file.readAll();
+    qCDebug(RestServerService) << "Serving media file" << filePath << "bytes=" << payload.size();
+    sendResponse(socket, 200, "OK", contentTypeForFile(filePath), payload);
 }
 
 void Service::sendResponse(QTcpSocket* socket,
@@ -193,7 +201,10 @@ void Service::sendResponse(QTcpSocket* socket,
     response += "\r\n";
     response += body;
 
+    qCDebug(RestServerService) << "Sending HTTP response status=" << statusCode << "reason=" << reason
+                               << "contentType=" << contentType << "bodyBytes=" << body.size();
     socket->write(response);
+    socket->flush();
     socket->disconnectFromHost();
 }
 
