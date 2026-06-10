@@ -20,7 +20,6 @@ enum class Method
 {
     Subscribe,
     Unsubscribe,
-    GetConfig,
     SetBrightness,
     SetVolume,
     SetDeviceId,
@@ -44,6 +43,8 @@ Q_ENUM_NS(Method)
 enum class Topic
 {
     Configuration,
+    ApplicationList,
+    ApplicationDetail,
     Media,
     ApplicationStatus,
     ProcessorTemperature,
@@ -96,9 +97,6 @@ inline Method methodFromString(const QString& methodStr)
     }
     if (methodStr == "unsubscribe") {
         return Method::Unsubscribe;
-    }
-    if (methodStr == "getConfig") {
-        return Method::GetConfig;
     }
     if (methodStr == "setBrightness") {
         return Method::SetBrightness;
@@ -158,8 +156,6 @@ inline QString methodToString(Method type)
         return "subscribe";
     case Method::Unsubscribe:
         return "unsubscribe";
-    case Method::GetConfig:
-        return "getConfig";
     case Method::SetBrightness:
         return "setBrightness";
     case Method::SetVolume:
@@ -202,6 +198,12 @@ inline Topic topicFromString(const QString& topicStr)
     if (topicStr == "configuration") {
         return Topic::Configuration;
     }
+    if (topicStr == "application-list") {
+        return Topic::ApplicationList;
+    }
+    if (topicStr == "application-detail") {
+        return Topic::ApplicationDetail;
+    }
     if (topicStr == "media") {
         return Topic::Media;
     }
@@ -225,6 +227,10 @@ inline QString topicToString(Topic topic)
     switch (topic) {
     case Topic::Configuration:
         return "configuration";
+    case Topic::ApplicationList:
+        return "application-list";
+    case Topic::ApplicationDetail:
+        return "application-detail";
     case Topic::Media:
         return "media";
     case Topic::ApplicationStatus:

@@ -10,7 +10,6 @@ QList<Common::Communication::WebSocket::Method> MethodCatalog::allMethods()
     return {
         Method::Subscribe,
         Method::Unsubscribe,
-        Method::GetConfig,
         Method::SetBrightness,
         Method::SetVolume,
         Method::SetDeviceId,
@@ -36,6 +35,8 @@ QList<Common::Communication::WebSocket::Topic> MethodCatalog::allTopics()
 
     return {
         Topic::Configuration,
+        Topic::ApplicationList,
+        Topic::ApplicationDetail,
         Topic::Media,
         Topic::ApplicationStatus,
         Topic::ProcessorTemperature,

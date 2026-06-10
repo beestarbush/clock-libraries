@@ -47,6 +47,7 @@ class Service : public QObject
     using MethodHandler = std::function<MethodResult(const QJsonObject& params)>;
     using PublishHandler = std::function<void(const QJsonObject& params)>;
     using TopicPublisher = std::function<QJsonObject()>;
+    using InitialValueProvider = std::function<QJsonObject(const QJsonObject& subscribeParams)>;
 
     explicit Service(QObject* parent = nullptr);
     ~Service() override;
@@ -58,6 +59,7 @@ class Service : public QObject
     void registerMethodHandler(::Common::Communication::WebSocket::Method method, MethodHandler handler);
     void registerPublishHandler(::Common::Communication::WebSocket::Topic topic, PublishHandler handler);
     void registerPeriodicPublisher(::Common::Communication::WebSocket::Topic topic, int intervalMs, TopicPublisher publisher);
+    void registerInitialValueProvider(::Common::Communication::WebSocket::Topic topic, InitialValueProvider provider);
 
     void publish(::Common::Communication::WebSocket::Topic topic, const QJsonObject& params);
 
@@ -74,6 +76,7 @@ class Service : public QObject
     QJsonObject processRequest(const QJsonValue& id,
                                ::Common::Communication::WebSocket::Method method,
                                const QJsonObject& params,
+                               QWebSocket* replySocket,
                                QSet<::Common::Communication::WebSocket::Topic>* subscriptions = nullptr);
 
     void handlePublish(const QJsonObject& message);
@@ -93,6 +96,7 @@ class Service : public QObject
     QHash<int, MethodHandler> m_methodHandlers;
     QHash<int, PublishHandler> m_publishHandlers;
     QHash<int, PeriodicPublisherRegistration> m_periodicPublishers;
+    QHash<int, InitialValueProvider> m_initialValueProviders;
 };
 
 } // namespace Common::Communication::WebSocket::Server

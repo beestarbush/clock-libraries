@@ -146,6 +146,11 @@ void Service::registerPeriodicPublisher(::Common::Communication::WebSocket::Topi
     timer->start();
 }
 
+void Service::registerInitialValueProvider(::Common::Communication::WebSocket::Topic topic, InitialValueProvider provider)
+{
+    m_initialValueProviders.insert(static_cast<int>(topic), std::move(provider));
+}
+
 void Service::publish(::Common::Communication::WebSocket::Topic topic, const QJsonObject& params)
 {
     publishToSubscribed(topic, params);
@@ -153,7 +158,7 @@ void Service::publish(::Common::Communication::WebSocket::Topic topic, const QJs
 
 QJsonObject Service::processRequestForTest(const QString& id, ::Common::Communication::WebSocket::Method method, const QJsonObject& params)
 {
-    return processRequest(id, method, params, nullptr);
+    return processRequest(id, method, params, nullptr, nullptr);
 }
 
 void Service::onNewConnection()
@@ -216,7 +221,7 @@ void Service::onTextMessageReceived(const QString& message)
     const QJsonObject params = Frame::parseParams(msg);
 
     QSet<::Common::Communication::WebSocket::Topic>* subscriptions = m_subscriptions.contains(socket) ? &m_subscriptions[socket] : nullptr;
-    sendJson(socket, processRequest(id, method, params, subscriptions));
+    sendJson(socket, processRequest(id, method, params, socket, subscriptions));
 }
 
 void Service::onSocketDisconnected()
@@ -236,6 +241,7 @@ void Service::onSocketDisconnected()
 QJsonObject Service::processRequest(const QJsonValue& id,
                                     ::Common::Communication::WebSocket::Method method,
                                     const QJsonObject& params,
+                                    QWebSocket* replySocket,
                                     QSet<::Common::Communication::WebSocket::Topic>* subscriptions)
 {
     using Method = ::Common::Communication::WebSocket::Method;
@@ -253,6 +259,13 @@ QJsonObject Service::processRequest(const QJsonValue& id,
         }
 
         subscriptions->insert(topic);
+
+        const auto providerIt = m_initialValueProviders.constFind(static_cast<int>(topic));
+        if (replySocket && providerIt != m_initialValueProviders.cend() && providerIt.value()) {
+            const QJsonObject retained = providerIt.value()(params);
+            sendJson(replySocket, Frame::buildPublish(topic, retained));
+        }
+
         return makeResultFrame(id, QJsonObject{{"subscribed", topicToString(topic)}});
     }
     case Method::Unsubscribe: {

@@ -136,9 +136,7 @@ void Service::subscribe(const ::Common::Communication::WebSocket::Topic& topic)
         return;
     }
 
-    QJsonObject params;
-    params["topic"] = topicToString(topic);
-    request(::Common::Communication::WebSocket::Method::Subscribe, params, [topic](bool success, const QJsonObject&, const QString& error) {
+    subscribeInternal(topic, QJsonObject(), [topic](bool success, const QJsonObject&, const QString& error) {
         if (success) {
             qCDebug(WebSocketClientService) << "Subscribed to topic:" << topic;
         }
@@ -146,6 +144,34 @@ void Service::subscribe(const ::Common::Communication::WebSocket::Topic& topic)
             qCWarning(WebSocketClientService) << "Failed to subscribe to" << topic << ":" << error;
         }
     });
+}
+
+void Service::subscribe(const ::Common::Communication::WebSocket::Topic& topic,
+                        const QJsonObject& additionalParams,
+                        QObject* owner,
+                        PublishCallback onPublish,
+                        ResponseCallback onAck)
+{
+    bool updated = false;
+    for (ParamSubscription& subscription : m_paramSubscriptions) {
+        if (subscription.topic == topic && subscription.additionalParams == additionalParams) {
+            subscription.owner = owner;
+            subscription.onPublish = onPublish;
+            updated = true;
+            break;
+        }
+    }
+
+    if (!updated) {
+        m_paramSubscriptions.append(ParamSubscription{topic, additionalParams, owner, onPublish});
+    }
+
+    if (!m_connected) {
+        qCDebug(WebSocketClientService) << "Will subscribe to" << topic << "with params when connected";
+        return;
+    }
+
+    subscribeInternal(topic, additionalParams, onAck);
 }
 
 void Service::unsubscribe(const ::Common::Communication::WebSocket::Topic& topic)
@@ -156,8 +182,7 @@ void Service::unsubscribe(const ::Common::Communication::WebSocket::Topic& topic
         return;
     }
 
-    QJsonObject params;
-    params["topic"] = topicToString(topic);
+    QJsonObject params = buildSubscribeParams(topic, QJsonObject());
     request(::Common::Communication::WebSocket::Method::Unsubscribe, params, [topic](bool success, const QJsonObject&, const QString& error) {
         if (success) {
             qCDebug(WebSocketClientService) << "Unsubscribed from topic:" << topic;
@@ -166,6 +191,27 @@ void Service::unsubscribe(const ::Common::Communication::WebSocket::Topic& topic
             qCWarning(WebSocketClientService) << "Failed to unsubscribe from" << topic << ":" << error;
         }
     });
+}
+
+void Service::unsubscribe(const ::Common::Communication::WebSocket::Topic& topic,
+                          const QJsonObject& additionalParams,
+                          ResponseCallback onAck)
+{
+    for (auto it = m_paramSubscriptions.begin(); it != m_paramSubscriptions.end();) {
+        if (it->topic == topic && it->additionalParams == additionalParams) {
+            it = m_paramSubscriptions.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+
+    if (!m_connected) {
+        return;
+    }
+
+    QJsonObject params = buildSubscribeParams(topic, additionalParams);
+    request(::Common::Communication::WebSocket::Method::Unsubscribe, params, onAck);
 }
 
 void Service::onConnected()
@@ -238,7 +284,31 @@ void Service::dispatchMessage(const QJsonObject& message)
     }
 
     if (Frame::isPublish(message)) {
-        emit publishReceived(Frame::parseTopic(message), Frame::parseParams(message));
+        const ::Common::Communication::WebSocket::Topic topic = Frame::parseTopic(message);
+        const QJsonObject data = Frame::parseParams(message);
+
+        for (auto it = m_paramSubscriptions.begin(); it != m_paramSubscriptions.end();) {
+            if (it->owner.isNull()) {
+                it = m_paramSubscriptions.erase(it);
+                continue;
+            }
+
+            const ParamSubscription& subscription = *it;
+            if (subscription.topic != topic) {
+                ++it;
+                continue;
+            }
+            if (!paramsMatch(subscription.additionalParams, data)) {
+                ++it;
+                continue;
+            }
+            if (subscription.onPublish) {
+                subscription.onPublish(data);
+            }
+            ++it;
+        }
+
+        emit publishReceived(topic, data);
         return;
     }
 
@@ -248,9 +318,7 @@ void Service::dispatchMessage(const QJsonObject& message)
 void Service::resubscribeAll()
 {
     for (const ::Common::Communication::WebSocket::Topic& topic : m_subscribedTopics) {
-        QJsonObject params;
-        params["topic"] = topicToString(topic);
-        request(::Common::Communication::WebSocket::Method::Subscribe, params, [topic](bool success, const QJsonObject&, const QString& error) {
+        subscribeInternal(topic, QJsonObject(), [topic](bool success, const QJsonObject&, const QString& error) {
             if (success) {
                 qCDebug(WebSocketClientService) << "Subscribed to topic:" << topicToString(topic);
             }
@@ -259,6 +327,42 @@ void Service::resubscribeAll()
             }
         });
     }
+
+    for (auto it = m_paramSubscriptions.begin(); it != m_paramSubscriptions.end();) {
+        if (it->owner.isNull()) {
+            it = m_paramSubscriptions.erase(it);
+            continue;
+        }
+
+        subscribeInternal(it->topic, it->additionalParams, {});
+        ++it;
+    }
+}
+
+QJsonObject Service::buildSubscribeParams(const ::Common::Communication::WebSocket::Topic& topic,
+                                          const QJsonObject& additionalParams) const
+{
+    QJsonObject params = additionalParams;
+    params["topic"] = topicToString(topic);
+    return params;
+}
+
+bool Service::paramsMatch(const QJsonObject& expectedParams, const QJsonObject& data) const
+{
+    for (auto it = expectedParams.constBegin(); it != expectedParams.constEnd(); ++it) {
+        if (data.value(it.key()) != it.value()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void Service::subscribeInternal(const ::Common::Communication::WebSocket::Topic& topic,
+                                const QJsonObject& additionalParams,
+                                ResponseCallback onAck)
+{
+    QJsonObject params = buildSubscribeParams(topic, additionalParams);
+    request(::Common::Communication::WebSocket::Method::Subscribe, params, onAck);
 }
 
 } // namespace Common::Communication::WebSocket::Client

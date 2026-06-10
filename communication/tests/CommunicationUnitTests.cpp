@@ -47,7 +47,6 @@ void CommunicationUnitTests::testMethodMappingRoundTrip()
     const QList<Method> methods = {
         Method::Subscribe,
         Method::Unsubscribe,
-        Method::GetConfig,
         Method::SetBrightness,
         Method::SetVolume,
         Method::SetDeviceId,
@@ -82,6 +81,8 @@ void CommunicationUnitTests::testTopicMappingRoundTrip()
 
     const QList<Topic> topics = {
         Topic::Configuration,
+        Topic::ApplicationList,
+        Topic::ApplicationDetail,
         Topic::Media,
         Topic::ApplicationStatus,
         Topic::ProcessorTemperature,
@@ -189,7 +190,7 @@ void CommunicationUnitTests::testFrameParsers()
     QCOMPARE(Frame::parseMethod(request), Method::Subscribe);
     QCOMPARE(Frame::parseParams(request).value("topic").toString(), QString("configuration"));
 
-    const QJsonObject numericIdRequest = Frame::buildRequest(QJsonValue(456), Method::GetConfig, QJsonObject());
+    const QJsonObject numericIdRequest = Frame::buildRequest(QJsonValue(456), Method::GetStatus, QJsonObject());
     QCOMPARE(Frame::parseId(numericIdRequest), QJsonValue(456));
     QVERIFY(Frame::isValidId(Frame::parseId(numericIdRequest)));
 
@@ -224,7 +225,6 @@ void CommunicationUnitTests::testMethodCatalogCoverage()
 
     QVERIFY(methods.contains(Method::Subscribe));
     QVERIFY(methods.contains(Method::Unsubscribe));
-    QVERIFY(methods.contains(Method::GetConfig));
     QVERIFY(methods.contains(Method::SetBrightness));
     QVERIFY(methods.contains(Method::SetVolume));
     QVERIFY(methods.contains(Method::SetDeviceId));
@@ -257,6 +257,8 @@ void CommunicationUnitTests::testTopicCatalogCoverage()
     const QList<Topic> topics = MethodCatalog::allTopics();
 
     QVERIFY(topics.contains(Topic::Configuration));
+    QVERIFY(topics.contains(Topic::ApplicationList));
+    QVERIFY(topics.contains(Topic::ApplicationDetail));
     QVERIFY(topics.contains(Topic::Media));
     QVERIFY(topics.contains(Topic::ApplicationStatus));
     QVERIFY(topics.contains(Topic::ProcessorTemperature));
