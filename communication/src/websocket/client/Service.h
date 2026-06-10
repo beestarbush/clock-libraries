@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QObject>
 #include <QPointer>
+#include <QTimer>
 #include <QUrl>
 #include <QWebSocket>
 
@@ -60,6 +61,7 @@ class Service : public QObject
     void onTextMessageReceived(const QString& message);
     void dispatchMessage(const QJsonObject& message);
     void resubscribeAll();
+    void scheduleReconnect();
 
     struct ParamSubscription
     {
@@ -83,6 +85,8 @@ class Service : public QObject
     QHash<QString, ResponseCallback> m_pendingRequests;
     QList<::Common::Communication::WebSocket::Topic> m_subscribedTopics;
     QList<ParamSubscription> m_paramSubscriptions;
+    QTimer m_reconnectTimer;
+    bool m_autoReconnectEnabled;
 };
 
 } // namespace Common::Communication::WebSocket::Client

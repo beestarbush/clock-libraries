@@ -12,6 +12,7 @@ namespace Common::Communication::WebSocket::Client
 {
 
 const QString PROPERTY_SERVER_URL_DEFAULT = QStringLiteral("ws://127.0.0.1:5000/ws");
+constexpr int RECONNECT_INTERVAL_MS = 2000;
 
 namespace
 {
@@ -33,7 +34,8 @@ Service::Service(QObject* parent)
       m_webSocket(QString(), QWebSocketProtocol::VersionLatest, this),
       m_serverUrl(PROPERTY_SERVER_URL_DEFAULT),
       m_connected(false),
-      m_nextRequestId(1)
+      m_nextRequestId(1),
+      m_autoReconnectEnabled(true)
 {
     // Keep local backend connections deterministic on embedded devices.
     // System proxy auto-discovery may introduce multi-second delays.
@@ -43,6 +45,10 @@ Service::Service(QObject* parent)
     connect(&m_webSocket, &QWebSocket::disconnected, this, &Service::onDisconnected);
     connect(&m_webSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::errorOccurred), this, &Service::onError);
     connect(&m_webSocket, &QWebSocket::textMessageReceived, this, &Service::onTextMessageReceived);
+
+    m_reconnectTimer.setSingleShot(true);
+    m_reconnectTimer.setInterval(RECONNECT_INTERVAL_MS);
+    connect(&m_reconnectTimer, &QTimer::timeout, this, &Service::connectToSocket);
 }
 
 QString Service::serverUrl() const
@@ -67,6 +73,8 @@ void Service::setServerUrl(const QString& url)
 
 void Service::connectToSocket()
 {
+    m_autoReconnectEnabled = true;
+
     if (m_serverUrl.isEmpty()) {
         return;
     }
@@ -81,6 +89,8 @@ void Service::connectToSocket()
 
 void Service::disconnectFromSocket()
 {
+    m_autoReconnectEnabled = false;
+    m_reconnectTimer.stop();
     m_webSocket.close();
 }
 
@@ -217,6 +227,7 @@ void Service::unsubscribe(const ::Common::Communication::WebSocket::Topic& topic
 void Service::onConnected()
 {
     qCDebug(WebSocketClientService) << "Connected";
+    m_reconnectTimer.stop();
     m_connected = true;
     emit connectedChanged();
     resubscribeAll();
@@ -237,11 +248,17 @@ void Service::onDisconnected()
         m_connected = false;
         emit connectedChanged();
     }
+
+    scheduleReconnect();
 }
 
 void Service::onError(QAbstractSocket::SocketError error)
 {
     qCWarning(WebSocketClientService) << "Error:" << error << m_webSocket.errorString();
+
+    if (m_webSocket.state() == QAbstractSocket::UnconnectedState) {
+        scheduleReconnect();
+    }
 }
 
 void Service::onTextMessageReceived(const QString& message)
@@ -273,6 +290,10 @@ void Service::dispatchMessage(const QJsonObject& message)
         }
 
         ResponseCallback callback = m_pendingRequests.take(id);
+        if (!callback) {
+            return;
+        }
+
         QString error = Frame::parseErrorMessage(message);
         if (!error.isEmpty()) {
             callback(false, QJsonObject(), error);
@@ -287,25 +308,34 @@ void Service::dispatchMessage(const QJsonObject& message)
         const ::Common::Communication::WebSocket::Topic topic = Frame::parseTopic(message);
         const QJsonObject data = Frame::parseParams(message);
 
+        // Prune stale owner-bound subscriptions first.
         for (auto it = m_paramSubscriptions.begin(); it != m_paramSubscriptions.end();) {
             if (it->owner.isNull()) {
                 it = m_paramSubscriptions.erase(it);
                 continue;
             }
 
-            const ParamSubscription& subscription = *it;
+            ++it;
+        }
+
+        // Dispatch using a snapshot because callbacks may subscribe/unsubscribe.
+        QList<PublishCallback> callbacks;
+        callbacks.reserve(m_paramSubscriptions.size());
+
+        for (const ParamSubscription& subscription : m_paramSubscriptions) {
             if (subscription.topic != topic) {
-                ++it;
                 continue;
             }
             if (!paramsMatch(subscription.additionalParams, data)) {
-                ++it;
                 continue;
             }
             if (subscription.onPublish) {
-                subscription.onPublish(data);
+                callbacks.append(subscription.onPublish);
             }
-            ++it;
+        }
+
+        for (const PublishCallback& callback : callbacks) {
+            callback(data);
         }
 
         emit publishReceived(topic, data);
@@ -363,6 +393,16 @@ void Service::subscribeInternal(const ::Common::Communication::WebSocket::Topic&
 {
     QJsonObject params = buildSubscribeParams(topic, additionalParams);
     request(::Common::Communication::WebSocket::Method::Subscribe, params, onAck);
+}
+
+void Service::scheduleReconnect()
+{
+    if (!m_autoReconnectEnabled || m_serverUrl.isEmpty() || m_reconnectTimer.isActive()) {
+        return;
+    }
+
+    qCDebug(WebSocketClientService) << "Scheduling reconnect in" << RECONNECT_INTERVAL_MS << "ms";
+    m_reconnectTimer.start();
 }
 
 } // namespace Common::Communication::WebSocket::Client
